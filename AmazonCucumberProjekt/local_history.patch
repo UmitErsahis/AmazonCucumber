@@ -1,0 +1,471 @@
+Index: src/test/java/com/amazon/pages/LoginPage.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/com/amazon/pages/LoginPage.java b/src/test/java/com/amazon/pages/LoginPage.java
+--- a/src/test/java/com/amazon/pages/LoginPage.java	
++++ b/src/test/java/com/amazon/pages/LoginPage.java	
+@@ -2,10 +2,14 @@
+ 
+ import com.amazon.utilities.BrowserUtils;
+ import com.amazon.utilities.Driver;
++import org.junit.Assert;
+ import org.openqa.selenium.By;
+ import org.openqa.selenium.JavascriptExecutor;
+ import org.openqa.selenium.WebElement;
+ import org.openqa.selenium.support.FindBy;
++import org.openqa.selenium.support.ui.Select;
++
++import java.util.List;
+ 
+ public class LoginPage extends BasePage {
+ 
+@@ -18,6 +22,41 @@
+     @FindBy(css = "#glow-ingress-line2")
+     public WebElement deliveryVrfy_loc;
+ 
++    @FindBy(tagName = "label")
++    public List<WebElement> createAccount_loc;
++
++    @FindBy(css = "#continue")
++    public WebElement continueBtn_loc;
++
++    public WebElement createAccountLoc_Mthd(String values){
++
++        WebElement element = Driver.get().findElement(By.xpath("//label[contains(text(),'" + values + "')]"));
++        return element;
++
++    }
++
++     @FindBy(css = "#ap_email")
++     public WebElement emailSend_loc;
++
++
++
++
++    public void createAccount_Mthd(String name, String email,String password){
++
++        actions.moveToElement(createAccountLoc_Mthd("Your name")).sendKeys(name);
++        actions.moveToElement(emailSend_loc).sendKeys(email);
++        actions.moveToElement(createAccountLoc_Mthd("Password")).sendKeys(password);
++        actions.moveToElement(createAccountLoc_Mthd("Re-enter password")).sendKeys(password);
++        BrowserUtils.waitFor(3);
++        continueBtn_loc.click();
++
++    }
++
++
++    public void verifyCountry_Mthd(String country){
++
++    }
++
+     public void changePostcode_Mth(String postcode){
+         sendPostCode_loc.sendKeys(postcode);
+         BrowserUtils.waitFor(5);
+@@ -33,6 +72,37 @@
+ 
+     }
+ 
++    @FindBy(xpath = " //a[@id='GLUXCountryList_233']")
++    public WebElement countrySelection_loc;
++
++    @FindBy (xpath = "//select[@id='GLUXCountryList']")//buraya sadece select yazan yerdeki locatoru koyacagiz(size 1 olan)
++    public WebElement slctContry_loc;
++
++
++    public void selectCountry_Mthd(){
++
++        Select select=new Select(slctContry_loc);
++        //tiklama islemi
++        select.selectByIndex(211);
++        BrowserUtils.waitFor(2);
++        String actualText = select.getOptions().get(211).getText();
++        Assert.assertEquals("Sri Lanka",actualText);
++
++        //yazdirma islemi asagidaki gibi
++        //List<WebElement> options = select.getOptions();
++        //System.out.println("options.size() = " + options.size());
++        //System.out.println("options.get(0) = " + options.get(0).getText());
++        /*for (WebElement option : options) {
++            System.out.println("option.getText() = " + option.getText());
++        }*/
++
++    }
++
++    public void sendAccountInfo_Mthd(){
++
++    }
++
++
+ 
+ 
+ 
+Index: src/test/java/com/amazon/pages/BasePage.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/com/amazon/pages/BasePage.java b/src/test/java/com/amazon/pages/BasePage.java
+--- a/src/test/java/com/amazon/pages/BasePage.java	
++++ b/src/test/java/com/amazon/pages/BasePage.java	
+@@ -7,6 +7,7 @@
+ import org.openqa.selenium.interactions.Actions;
+ import org.openqa.selenium.support.FindBy;
+ import org.openqa.selenium.support.PageFactory;
++import org.openqa.selenium.support.ui.Select;
+ 
+ public class BasePage {
+ 
+@@ -18,14 +19,42 @@
+ 
+     Actions actions=new Actions(Driver.get());
+ 
++
+     /*@FindBy(xpath = "(//span[@class='a-button-text'])[1]")
+     public WebElement dontChangeBtn_loc;
+ }*/
+ 
+-    /*public void homePgCookiesBtn_Mthd() {
+-        WebElement cookies = Driver.get().findElement(By.xpath("(//span[@class='a-button-text'])[1]"));
+-        cookies.click();
++    public void homePgCookiesBtn_Mthd(int i) {
++        WebElement cookies = Driver.get().findElement(By.xpath("(//span[@class='a-button-text'])["+i+"]"));
++        actions.moveToElement(cookies).click().perform();
++
++    }
++
++    @FindBy(css = "#nav-link-accountList-nav-line-1")
++    public WebElement signinBtn_loc;
++
++    @FindBy(css = "#createAccountSubmit")
++    public WebElement createAccount_loc;
+ 
++    @FindBy(xpath = "//h1[contains(text(),'Create account')]")
++    public WebElement verifyCreateText_loc;
+ 
+-    }*/
++    @FindBy(id = "searchDropdownBox")
++    public WebElement searchDropDown_Loc;
++
++    @FindBy(css = "#nav-search-submit-button")
++    public WebElement searcButton_Loc;
++
++
++public void searchDropDown_Mthd(String productName){
++    Select select=new Select(searchDropDown_Loc);
++    select.selectByVisibleText(productName);
++
++}
++
++
++
++
++
++
+ }
+Index: src/test/java/com/amazon/runners/CukesRunner.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/com/amazon/runners/CukesRunner.java b/src/test/java/com/amazon/runners/CukesRunner.java
+--- a/src/test/java/com/amazon/runners/CukesRunner.java	
++++ b/src/test/java/com/amazon/runners/CukesRunner.java	
+@@ -14,11 +14,12 @@
+         },
+         features = "src/test/resources/features",
+         glue = "com/amazon/step_definitions",
+-        dryRun = false,
+-        tags = "@wip"                       // Before version 4  {"@wip", "@smoke"} - - and
++        dryRun =false,
++        tags = "@product"                       // Before version 4  {"@wip", "@smoke"} - - and
+                                            // Before version 5  "@wip, @smoke" - - or
+                                           // Before version 5    {"@smoke" , "~wip"} - - and not
+ )
+ public class CukesRunner {
++
+ }
+ 
+Index: src/test/java/com/amazon/step_definitions/Hooks.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/com/amazon/step_definitions/Hooks.java b/src/test/java/com/amazon/step_definitions/Hooks.java
+--- a/src/test/java/com/amazon/step_definitions/Hooks.java	
++++ b/src/test/java/com/amazon/step_definitions/Hooks.java	
+@@ -4,8 +4,10 @@
+ import io.cucumber.java.After;
+ import io.cucumber.java.Before;
+ import io.cucumber.java.Scenario;
++import org.openqa.selenium.By;
+ import org.openqa.selenium.OutputType;
+ import org.openqa.selenium.TakesScreenshot;
++import org.openqa.selenium.WebElement;
+ import org.openqa.selenium.interactions.Actions;
+ 
+ import java.util.concurrent.TimeUnit;
+@@ -21,6 +23,8 @@
+ 
+ 
+ 
++
++
+     }
+ 
+     @After
+Index: src/test/java/com/amazon/step_definitions/LoginStepDefs.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/com/amazon/step_definitions/LoginStepDefs.java b/src/test/java/com/amazon/step_definitions/LoginStepDefs.java
+--- a/src/test/java/com/amazon/step_definitions/LoginStepDefs.java	
++++ b/src/test/java/com/amazon/step_definitions/LoginStepDefs.java	
+@@ -1,26 +1,34 @@
+ package com.amazon.step_definitions;
+ 
++import com.amazon.pages.BasePage;
+ import com.amazon.pages.LoginPage;
+ import com.amazon.utilities.BrowserUtils;
+ import com.amazon.utilities.ConfigurationReader;
+ import com.amazon.utilities.Driver;
+ import io.cucumber.java.en.And;
+ import io.cucumber.java.en.Given;
++import io.cucumber.java.en.Then;
++import io.cucumber.java.en.When;
+ import org.junit.Assert;
+ import org.openqa.selenium.JavascriptExecutor;
+ import org.openqa.selenium.Keys;
+ 
++
++import javax.security.auth.login.Configuration;
++
+ public class LoginStepDefs {
+ 
+-    LoginPage loginPage=new LoginPage();
++    LoginPage loginPage = new LoginPage();
++    BasePage basePage = new BasePage();
+ 
+     @Given("the user is on the Amazon BasePage")
+     public void the_user_is_on_the_Amazon_BasePage() {
+-        //int dontChange=1;
+-        //int change=2;
++        int dontChange = 1;
++        int change = 2;
+         Driver.get().get(ConfigurationReader.get("url"));
++        BrowserUtils.waitFor(3);
++        loginPage.homePgCookiesBtn_Mthd(dontChange);
+     }
+-
+ 
+ 
+     @And("the user navigates to Liefern nach Ländern section")
+@@ -29,9 +37,9 @@
+     }
+ 
+ 
+-        //sendkeys sadece string kabul ediyor, bu nedenle feature da degeri String gönderdik
++    //sendkeys sadece string kabul ediyor, bu nedenle feature da degeri String gönderdik
+ 
+-        //sendkeys javascript code
++    //sendkeys javascript code
+         /*JavascriptExecutor js = (JavascriptExecutor) Driver.get();
+         js.executeScript("document.getElementById('#GLUXZipUpdateInput').value='11201';");*/
+ 
+@@ -44,7 +52,55 @@
+     @And("the user verifies that delivery region is {string}")
+     public void theUserVerifiesThatDeliveryRegionIs(String expectedText) {
+         String actualText = loginPage.deliveryVrfy_loc.getText();
+-        Assert.assertEquals("Brooklyn 11201",actualText);
++        Assert.assertEquals(expectedText, actualText);
+         System.out.println(actualText);
+     }
++
++    @And("the user select country from selection")
++    public void theUserSelectCountryFromSelection() {
++        loginPage.liefernPlaceBtn_loc.click();
++
++
++    }
++
++    @Then("verify that country were changed")
++    public void verifyThatCountryWereChanged() {
++        loginPage.selectCountry_Mthd();
++    }
++
++    @Given("the user is on the register page")
++    public void the_user_is_on_the_register_page() {
++        Driver.get().get(ConfigurationReader.get("url"));
++
++    }
++
++
++    @When("the user should be able register to amazon")
++    public void the_user_should_be_able_register_to_amazon() {
++
++
++    }
++
++
++
++    @And("the user enters a {string} into the field")
++    public void theUserEntersAIntoTheField(String arg0) {
++
++    }
++
++
++    @When("the user enters in using{string},{string},{string},{string}")
++    public void theUserEntersInUsing(String name, String email, String password, String rePassword) {
++
++        //name = ConfigurationReader.get("name");
++        //email = ConfigurationReader.get("email");
++        //password = ConfigurationReader.get("password"); in this way we can values also from config. properties
++        basePage.signinBtn_loc.click();
++        basePage.createAccount_loc.click();
++        BrowserUtils.waitFor(3);
++        loginPage.createAccount_Mthd(name, email, password);
++        BrowserUtils.waitFor(3);
++
++    }
+ }
++
+Index: src/test/java/com/amazon/step_definitions/SearchProductStep_Defs.java
+===================================================================
+diff --git a/src/test/java/com/amazon/step_definitions/SearchProductStep_Defs.java b/src/test/java/com/amazon/step_definitions/SearchProductStep_Defs.java
+new file mode 100644
+--- /dev/null	
++++ b/src/test/java/com/amazon/step_definitions/SearchProductStep_Defs.java	
+@@ -0,0 +1,30 @@
++package com.amazon.step_definitions;
++
++import com.amazon.pages.BasePage;
++import io.cucumber.java.en.Then;
++import io.cucumber.java.en.When;
++
++public class SearchProductStep_Defs {
++
++    BasePage basepage = new BasePage();
++
++    @When("the user selects {string} from DropDown Button")
++    public void the_user_selects_from_DropDown_Button(String string) {
++        basepage.homePgCookiesBtn_Mthd(1);
++
++        basepage.searchDropDown_Mthd("Electronics");
++    }
++
++    @When("the user clicks search button")
++    public void the_user_clicks_search_button() {
++        basepage.searcButton_Loc.click();
++
++    }
++
++    @Then("the user should be able to see relevant product page")
++    public void the_user_should_be_able_to_see_relevant_product_page() {
++
++    }
++
++
++}
+Index: src/test/resources/features/Login.feature
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/resources/features/Login.feature b/src/test/resources/features/Login.feature
+--- a/src/test/resources/features/Login.feature	
++++ b/src/test/resources/features/Login.feature	
+@@ -1,27 +1,27 @@
++Feature: User should be able to change Liefern Region in Amazon
+ 
+-Feature: User should be able to navigate to Amazon BasePage
+ 
+-  @wip
+   Scenario: Enter into Amazon Page
+     Given the user is on the Amazon BasePage
+     And the user navigates to Liefern nach Ländern section
+     And the user changes liefern adress in putting "11201" into the field
+     And the user verifies that delivery region is "Brooklyn 11201‌"
+-
++    And the user select country from selection
++    Then verify that country were changed
+ 
+-
++  @wip
+ 
+ 
+ 
+-    Scenario Outline:
+-      Given the user is on the Amazon BasePage
+-      And the user navigates to Liefern nach Ländern section
+-      And the user enters a "<postcode>" into the field
+-      Examples:
+-      |postcode|
+-      |11201   |
+-      |11202   |
+-      |11203   |
+-      |11204   |
++  Scenario Outline:
++    Given the user is on the Amazon BasePage
++    And the user navigates to Liefern nach Ländern section
++    And the user enters a "<postcode>" into the field
++    Examples:
++      | postcode |
++      | 11201    |
++      | 11202    |
++      | 11203    |
++      | 11204    |
+ 
+     #ayni senaryoyu bir den fazla döndürüyor
+\ No newline at end of file
+Index: src/test/resources/features/SearchProduct.feature
+===================================================================
+diff --git a/src/test/resources/features/SearchProduct.feature b/src/test/resources/features/SearchProduct.feature
+new file mode 100644
+--- /dev/null	
++++ b/src/test/resources/features/SearchProduct.feature	
+@@ -0,0 +1,10 @@
++Feature: User should be able to search with Search DropDown Buttons
++
++@product
++  Scenario: Searching through DropDown
++    Given the user is on the Amazon BasePage
++
++
++    When the user selects "product" from DropDown Button
++    And the user clicks search button
++    Then the user should be able to see relevant product page
+\ No newline at end of file
+Index: src/test/resources/features/RegisterAmazon.feature
+===================================================================
+diff --git a/src/test/resources/features/RegisterAmazon.feature b/src/test/resources/features/RegisterAmazon.feature
+new file mode 100644
+--- /dev/null	
++++ b/src/test/resources/features/RegisterAmazon.feature	
+@@ -0,0 +1,9 @@
++Feature: User should be able to register to Amazon
++
++  Scenario Outline: Create account in amazon
++    Given the user is on the register page
++    When the user enters in using"<Your name>","<Mobil number or email>","<Password>","<Re-enter password>"
++    Then the user should be able register to amazon
++    Examples:
++      | Your name | Mobil number or email | Password   | Re-enter password |
++      | Ahmet     | ahmet23@gmail.com     | Test12345! | Test12345!       |
+Index: Configuration.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>ISO-8859-1
+===================================================================
+diff --git a/Configuration.properties b/Configuration.properties
+--- a/Configuration.properties	
++++ b/Configuration.properties	
+@@ -4,3 +4,7 @@
+ passwordTeacher= Test12345!
+ usernameDeveloper=supertester@gmail.com
+ passwordDeveloper=Test12345!
++name=Jessica Lopez
++email=jessicalopez@hotmail.com
++password=Jessica1234%
++
