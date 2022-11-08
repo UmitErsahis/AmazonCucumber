@@ -13,7 +13,7 @@ public class BasePage {
 
     public BasePage() {
 
-        PageFactory.initElements(Driver.get(), this);
+         PageFactory.initElements(Driver.get(), this);
         //bu sayfada bulunan element ve methodlari kullanmama izin veriyor.
     }
 
